@@ -1,56 +1,72 @@
-//./mvnw spring-boot:run
 package com.example.demo.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import com.example.demo.model.Constelacion;
+import com.example.demo.repository.ConstelacionRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/constelaciones")
 public class CatalogoController {
+    private final ConstelacionRepository repositorio;
 
-    private final List<Constelacion> catalogo = new ArrayList<>();
-    private long siguienteId = 1;
-
-    public CatalogoController() {
-        catalogo.add(new Constelacion(siguienteId++, "Orión", "Ori", "Ambos", "Rigel", "El cazador Orión"));
-        catalogo.add(new Constelacion(siguienteId++, "Cruz del Sur", "Cru", "Sur", "Acrux", "La cruz del cielo austral"));
+    public CatalogoController(ConstelacionRepository repositorio) {
+        this.repositorio = repositorio;
     }
 
     @GetMapping
     public List<Constelacion> listar() {
-        return catalogo;
+        return repositorio.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Constelacion obtener(@PathVariable Long id) {
+        return buscar(id);
     }
 
     @PostMapping
-    public ResponseEntity<Constelacion> registrar(@RequestBody NuevaConstelacion nueva) {
-        if (nueva.nombre() == null || nueva.nombre().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre es obligatorio");
-        }
-
-        Constelacion constelacion = new Constelacion(
-                siguienteId++, nueva.nombre(), nueva.abreviatura(), nueva.hemisferio(),
-                nueva.estrellaPrincipal(), nueva.mitologia()
-        );
-        catalogo.add(constelacion);
-        return ResponseEntity.status(HttpStatus.CREATED).body(constelacion);
+    public ResponseEntity<Constelacion> crear(@RequestBody DatosConstelacion datos) {
+        validar(datos);
+        Constelacion nueva = new Constelacion(datos.nombre().trim(), datos.hemisferio(), datos.estrellaPrincipal().trim());
+        return ResponseEntity.status(HttpStatus.CREATED).body(repositorio.save(nueva));
     }
 
-    public record NuevaConstelacion(
-            String nombre, String abreviatura, String hemisferio,
-            String estrellaPrincipal, String mitologia
-    ) {}
+    @PutMapping("/{id}")
+    public Constelacion actualizar(@PathVariable Long id, @RequestBody DatosConstelacion datos) {
+        Constelacion actual = buscar(id);
+        validar(datos);
+        actual.setNombre(datos.nombre().trim());
+        actual.setHemisferio(datos.hemisferio());
+        actual.setEstrellaPrincipal(datos.estrellaPrincipal().trim());
+        return repositorio.save(actual);
+    }
 
-    public record Constelacion(
-            long id, String nombre, String abreviatura, String hemisferio,
-            String estrellaPrincipal, String mitologia
-    ) {}
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        repositorio.delete(buscar(id));
+        return ResponseEntity.noContent().build();
+    }
+
+    private Constelacion buscar(Long id) {
+        return repositorio.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Constelación no encontrada"));
+    }
+
+    private void validar(DatosConstelacion datos) {
+        if (datos.nombre() == null || datos.nombre().isBlank() || datos.nombre().length() > 100
+                || datos.estrellaPrincipal() == null || datos.estrellaPrincipal().isBlank()
+                || datos.estrellaPrincipal().length() > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nombre y estrella principal son obligatorios y admiten hasta 100 caracteres");
+        }
+        if (datos.hemisferio() == null || !List.of("Norte", "Sur", "Ambos").contains(datos.hemisferio())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El hemisferio debe ser Norte, Sur o Ambos");
+        }
+    }
+
+    public record DatosConstelacion(String nombre, String hemisferio, String estrellaPrincipal) {}
 }
+

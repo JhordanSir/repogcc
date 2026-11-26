@@ -1,0 +1,7 @@
+# Solo para uso local: publica la API en el puerto del equipo.
+# Docker Compose carga este archivo automáticamente; en Dokploy no se usa
+# (el acceso público se gestiona con un dominio y HTTPS desde su panel).
+services:
+  app:
+    ports:
+      - "${APP_PORT:-8081}:8081"

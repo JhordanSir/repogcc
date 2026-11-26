@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <title>Catálogo de constelaciones</title>
+  <style>
+    :root {
+      --fondo: #0f1424;
+      --tarjeta: #181f36;
+      --borde: #2a3355;
+      --texto: #e8ecf8;
+      --suave: #98a2c4;
+      --acento: #7c9cff;
+      --peligro: #ff6b7a;
+      --ok: #4ad6a0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px 16px 48px;
+      background: var(--fondo);
+      color: var(--texto);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    main { max-width: 860px; margin: 0 auto; }
+    h1 { margin: 0; font-size: 1.6rem; }
+    h2 { margin: 0 0 16px; font-size: 1.1rem; }
+    .subtitulo { margin: 4px 0 24px; color: var(--suave); }
+    .tarjeta {
+      background: var(--tarjeta);
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    form { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); }
+    .campo { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: .85rem; color: var(--suave); }
+    input, select {
+      padding: 10px 12px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      background: var(--fondo);
+      color: var(--texto);
+      font: inherit;
+    }
+    input:focus, select:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
+    .acciones { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; }
+    button {
+      padding: 9px 16px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--texto);
+      font: inherit;
+      cursor: pointer;
+    }
+    button:hover:not(:disabled) { border-color: var(--acento); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    button.primario { background: var(--acento); border-color: var(--acento); color: #0b1020; font-weight: 600; }
+    button.peligro { color: var(--peligro); }
+    button.peligro:hover:not(:disabled) { border-color: var(--peligro); }
+    .cabecera-lista { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .cabecera-lista h2 { margin: 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--borde); }
+    th { font-size: .8rem; font-weight: 600; color: var(--suave); text-transform: uppercase; letter-spacing: .04em; }
+    tr:last-child td { border-bottom: 0; }
+    td.id { color: var(--suave); width: 48px; }
+    td.botones { text-align: right; white-space: nowrap; }
+    td.botones button { padding: 5px 10px; font-size: .875rem; margin-left: 6px; }
+    .etiqueta {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--borde);
+      font-size: .8rem;
+      color: var(--acento);
+    }
+    .vacio { padding: 24px 0; text-align: center; color: var(--suave); }
+    .aviso { padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; border: 1px solid; }
+    .aviso.error { color: var(--peligro); border-color: var(--peligro); }
+    .aviso.exito { color: var(--ok); border-color: var(--ok); }
+    [x-cloak] { display: none !important; }
+    @media (max-width: 640px) {
+      form { grid-template-columns: 1fr; }
+      th.col-id, td.id { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main x-data="catalogo()" x-init="cargar()" x-cloak>
+    <h1>Catálogo de constelaciones</h1>
+    <p class="subtitulo">CRUD en Apps Script + Alpine.js que consume la API REST de Spring Boot.</p>
+
+    <div class="aviso error" x-show="error" x-text="error" role="alert"></div>
+    <div class="aviso exito" x-show="exito" x-text="exito" role="status"></div>
+
+    <section class="tarjeta">
+      <h2 x-text="form.id === null ? 'Nueva constelación' : 'Editar constelación #' + form.id"></h2>
+      <form @submit.prevent="guardar()">
+        <div class="campo">
+          <label for="nombre">Nombre</label>
+          <input id="nombre" type="text" maxlength="100" required x-model="form.nombre" placeholder="Ej.: Escorpio">
+        </div>
+        <div class="campo">
+          <label for="hemisferio">Hemisferio</label>
+          <select id="hemisferio" x-model="form.hemisferio">
+            <option>Norte</option>
+            <option>Sur</option>
+            <option>Ambos</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="estrella">Estrella principal</label>
+          <input id="estrella" type="text" maxlength="100" required x-model="form.estrellaPrincipal" placeholder="Ej.: Antares">
+        </div>
+        <div class="acciones">
+          <button type="submit" class="primario" :disabled="guardando"
+                  x-text="guardando ? 'Guardando…' : (form.id === null ? 'Crear' : 'Guardar cambios')"></button>
+          <button type="button" x-show="form.id !== null" @click="cancelar()" :disabled="guardando">Cancelar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="tarjeta">
+      <div class="cabecera-lista">
+        <h2>Constelaciones (<span x-text="items.length"></span>)</h2>
+        <button type="button" @click="cargar()" :disabled="cargando" x-text="cargando ? 'Cargando…' : 'Actualizar'"></button>
+      </div>
+
+      <p class="vacio" x-show="cargando && items.length === 0">Cargando…</p>
+      <p class="vacio" x-show="!cargando && items.length === 0">No hay constelaciones registradas.</p>
+
+      <table x-show="items.length > 0">
+        <thead>
+          <tr>
+            <th class="col-id">ID</th>
+            <th>Nombre</th>
+            <th>Hemisferio</th>
+            <th>Estrella principal</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="c in items" :key="c.id">
+            <tr>
+              <td class="id" x-text="c.id"></td>
+              <td x-text="c.nombre"></td>
+              <td><span class="etiqueta" x-text="c.hemisferio"></span></td>
+              <td x-text="c.estrellaPrincipal"></td>
+              <td class="botones">
+                <template x-if="confirmandoId !== c.id">
+                  <span>
+                    <button type="button" @click="editar(c)" :disabled="guardando">Editar</button>
+                    <button type="button" class="peligro" @click="confirmandoId = c.id" :disabled="guardando">Eliminar</button>
+                  </span>
+                </template>
+                <template x-if="confirmandoId === c.id">
+                  <span>
+                    ¿Eliminar?
+                    <button type="button" class="peligro" @click="eliminar(c)" :disabled="guardando">Sí</button>
+                    <button type="button" @click="confirmandoId = null" :disabled="guardando">No</button>
+                  </span>
+                </template>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    // Invoca una función de Code.gs y devuelve una promesa.
+    function servidor(funcion, ...argumentos) {
+      return new Promise((resolver, rechazar) => {
+        google.script.run
+          .withSuccessHandler(resolver)
+          .withFailureHandler(e => rechazar(new Error((e && e.message) || String(e))))
+          [funcion](...argumentos);
+      });
+    }
+
+    function catalogo() {
+      const vacio = () => ({ id: null, nombre: '', hemisferio: 'Norte', estrellaPrincipal: '' });
+
+      return {
+        items: [],
+        form: vacio(),
+        cargando: false,
+        guardando: false,
+        confirmandoId: null,
+        error: '',
+        exito: '',
+
+        avisar(tipo, texto) {
+          this.error = tipo === 'error' ? texto : '';
+          this.exito = tipo === 'exito' ? texto : '';
+          if (tipo === 'exito') setTimeout(() => { this.exito = ''; }, 3500);
+        },
+
+        async cargar() {
+          this.cargando = true;
+          try {
+            this.items = await servidor('listarConstelaciones');
+            this.error = '';
+          } catch (e) {
+            this.avisar('error', 'No se pudo cargar la lista: ' + e.message);
+          } finally {
+            this.cargando = false;
+          }
+        },
+
+        async guardar() {
+          const datos = {
+            nombre: this.form.nombre.trim(),
+            hemisferio: this.form.hemisferio,
+            estrellaPrincipal: this.form.estrellaPrincipal.trim()
+          };
+          if (!datos.nombre || !datos.estrellaPrincipal) {
+            return this.avisar('error', 'El nombre y la estrella principal son obligatorios.');
+          }
+
+          const editando = this.form.id !== null;
+          this.guardando = true;
+          try {
+            if (editando) {
+              await servidor('actualizarConstelacion', this.form.id, datos);
+            } else {
+              await servidor('crearConstelacion', datos);
+            }
+            this.form = vacio();
+            await this.cargar();
+            this.avisar('exito', editando ? 'Constelación actualizada.' : 'Constelación creada.');
+          } catch (e) {
+            this.avisar('error', e.message);
+          } finally {
+            this.guardando = false;
+          }
+        },
+
+        editar(c) {
+          this.form = { id: c.id, nombre: c.nombre, hemisferio: c.hemisferio, estrellaPrincipal: c.estrellaPrincipal };
+          this.error = '';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        cancelar() {
+          this.form = vacio();
+          this.error = '';
+        },
+
+        async eliminar(c) {
+          this.guardando = true;
+          try {
+            await servidor('eliminarConstelacion', c.id);
+            if (this.form.id === c.id) this.form = vacio();
+            this.confirmandoId = null;
+            await this.cargar();
+            this.avisar('exito', 'Constelación eliminada.');
+          } catch (e) {
+            this.confirmandoId = null;
+            this.avisar('error', e.message);
+          } finally {
+            this.guardando = false;
+          }
+        }
+      };
+    }
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+</body>
+</html>

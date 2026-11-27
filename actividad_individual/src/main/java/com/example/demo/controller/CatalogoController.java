@@ -31,7 +31,8 @@ public class CatalogoController {
     @PostMapping
     public ResponseEntity<Constelacion> crear(@RequestBody DatosConstelacion datos) {
         validar(datos);
-        Constelacion nueva = new Constelacion(datos.nombre().trim(), datos.hemisferio(), datos.estrellaPrincipal().trim());
+        Constelacion nueva = new Constelacion(datos.nombre().trim(), datos.hemisferio(), datos.estrellaPrincipal().trim(),
+                textoOpcional(datos.descubiertoPor()));
         return ResponseEntity.status(HttpStatus.CREATED).body(repositorio.save(nueva));
     }
 
@@ -42,6 +43,7 @@ public class CatalogoController {
         actual.setNombre(datos.nombre().trim());
         actual.setHemisferio(datos.hemisferio());
         actual.setEstrellaPrincipal(datos.estrellaPrincipal().trim());
+        actual.setDescubiertoPor(textoOpcional(datos.descubiertoPor()));
         return repositorio.save(actual);
     }
 
@@ -65,8 +67,16 @@ public class CatalogoController {
         if (datos.hemisferio() == null || !List.of("Norte", "Sur", "Ambos").contains(datos.hemisferio())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El hemisferio debe ser Norte, Sur o Ambos");
         }
+        if (datos.descubiertoPor() != null && datos.descubiertoPor().length() > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Descubierto por admite hasta 100 caracteres");
+        }
     }
 
-    public record DatosConstelacion(String nombre, String hemisferio, String estrellaPrincipal) {}
+    // Campo opcional: si viene vacío se guarda como null.
+    private String textoOpcional(String texto) {
+        return texto == null || texto.isBlank() ? null : texto.trim();
+    }
+
+    public record DatosConstelacion(String nombre, String hemisferio, String estrellaPrincipal, String descubiertoPor) {}
 }
 

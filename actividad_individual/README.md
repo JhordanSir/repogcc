@@ -38,11 +38,12 @@ Ejemplo de cuerpo JSON para POST y PUT:
 {
   "nombre": "Escorpio",
   "hemisferio": "Sur",
-  "estrellaPrincipal": "Antares"
+  "estrellaPrincipal": "Antares",
+  "descubiertoPor": "Ptolomeo"
 }
 ```
 
-Los tres campos son obligatorios; `nombre` y `estrellaPrincipal` admiten hasta 100 caracteres. El hemisferio debe ser exactamente `Norte`, `Sur` o `Ambos`. Se responde con 201 al crear, 204 al eliminar, 400 si los datos son inválidos y 404 si no existe el ID.
+`nombre`, `hemisferio` y `estrellaPrincipal` son obligatorios; `descubiertoPor` es opcional. Los campos de texto admiten hasta 100 caracteres. El hemisferio debe ser exactamente `Norte`, `Sur` o `Ambos`. Se responde con 201 al crear, 204 al eliminar, 400 si los datos son inválidos y 404 si no existe el ID.
 
 Ejemplos con curl:
 

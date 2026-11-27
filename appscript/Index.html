@@ -25,6 +25,7 @@
       <option>Ambos</option>
     </select>
     <input placeholder="Estrella principal" required x-model="form.estrellaPrincipal">
+    <input placeholder="Descubierto por" x-model="form.descubiertoPor">
     <button type="submit" x-text="form.id === null ? 'Crear' : 'Guardar'"></button>
     <button type="button" x-show="form.id !== null" @click="limpiar()">Cancelar</button>
   </form>
@@ -32,7 +33,7 @@
   <h2>Constelaciones</h2>
   <table>
     <thead>
-      <tr><th>ID</th><th>Nombre</th><th>Hemisferio</th><th>Estrella principal</th><th></th></tr>
+      <tr><th>ID</th><th>Nombre</th><th>Hemisferio</th><th>Estrella principal</th><th>Descubierto por</th><th></th></tr>
     </thead>
     <tbody>
       <template x-for="c in items" :key="c.id">
@@ -41,6 +42,7 @@
           <td x-text="c.nombre"></td>
           <td x-text="c.hemisferio"></td>
           <td x-text="c.estrellaPrincipal"></td>
+          <td x-text="c.descubiertoPor || '-'"></td>
           <td>
             <button @click="editar(c)">Editar</button>
             <button @click="eliminar(c)">Eliminar</button>
@@ -65,7 +67,7 @@
     function catalogo() {
       return {
         items: [],
-        form: { id: null, nombre: '', hemisferio: 'Norte', estrellaPrincipal: '' },
+        form: { id: null, nombre: '', hemisferio: 'Norte', estrellaPrincipal: '', descubiertoPor: '' },
         error: '',
 
         // Ejecuta una función del servidor; si falla, muestra el error y devuelve undefined.
@@ -87,7 +89,8 @@
           const datos = {
             nombre: this.form.nombre,
             hemisferio: this.form.hemisferio,
-            estrellaPrincipal: this.form.estrellaPrincipal
+            estrellaPrincipal: this.form.estrellaPrincipal,
+            descubiertoPor: this.form.descubiertoPor
           };
           const id = this.form.id;
           const resultado = id === null
@@ -100,11 +103,11 @@
         },
 
         editar(c) {
-          this.form = { id: c.id, nombre: c.nombre, hemisferio: c.hemisferio, estrellaPrincipal: c.estrellaPrincipal };
+          this.form = { id: c.id, nombre: c.nombre, hemisferio: c.hemisferio, estrellaPrincipal: c.estrellaPrincipal, descubiertoPor: c.descubiertoPor || '' };
         },
 
         limpiar() {
-          this.form = { id: null, nombre: '', hemisferio: 'Norte', estrellaPrincipal: '' };
+          this.form = { id: null, nombre: '', hemisferio: 'Norte', estrellaPrincipal: '', descubiertoPor: '' };
         },
 
         async eliminar(c) {

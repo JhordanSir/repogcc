@@ -18,14 +18,18 @@ public class Constelacion {
     @Column(name = "estrella_principal", nullable = false, length = 100)
     private String estrellaPrincipal;
 
+    @Column(name = "descubierto_por", length = 100)
+    private String descubiertoPor;
+
     protected Constelacion() {}
 
-    public Constelacion(String nombre, String hemisferio, String estrellaPrincipal) {
+    public Constelacion(String nombre, String hemisferio, String estrellaPrincipal, String descubiertoPor) {
         this.nombre = nombre;
         this.hemisferio = hemisferio;
         this.estrellaPrincipal = estrellaPrincipal;
+        this.descubiertoPor = descubiertoPor;
     }
-
+    
     public Long getId() { return id; }
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
@@ -33,4 +37,6 @@ public class Constelacion {
     public void setHemisferio(String hemisferio) { this.hemisferio = hemisferio; }
     public String getEstrellaPrincipal() { return estrellaPrincipal; }
     public void setEstrellaPrincipal(String estrellaPrincipal) { this.estrellaPrincipal = estrellaPrincipal; }
+    public String getDescubiertoPor() { return descubiertoPor; }
+    public void setDescubiertoPor(String descubiertoPor) { this.descubiertoPor = descubiertoPor; }
 }

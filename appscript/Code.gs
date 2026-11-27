@@ -44,7 +44,8 @@ function llamarApi_(metodo, id, cuerpo) {
     opciones.payload = JSON.stringify({
       nombre: cuerpo.nombre,
       hemisferio: cuerpo.hemisferio,
-      estrellaPrincipal: cuerpo.estrellaPrincipal
+      estrellaPrincipal: cuerpo.estrellaPrincipal,
+      descubiertoPor: cuerpo.descubiertoPor
     });
   }
 
